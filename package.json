@@ -1,0 +1,30 @@
+{
+  "name": "frontend-project-lvl2",
+  "version": "0.0.1",
+  "description": "Вычислитель отличий - второй проект профессии фронтенд-программист на Хекслет",
+  "type": "module",
+  "main": "src/index.js",
+  "bin": {
+    "gendiff": "bin/gendiff.js"
+  },
+  "scripts": {
+    "test": ""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dpetruk/frontend-project-lvl2.git"
+  },
+  "keywords": [
+    "difference-calculator",
+    "hexlet"
+  ],
+  "author": "Dmitry Petruk",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dpetruk/frontend-project-lvl2/issues"
+  },
+  "homepage": "https://github.com/dpetruk/frontend-project-lvl2#readme",
+  "dependencies": {
+    "commander": "^6.0.0"
+  }
+}
