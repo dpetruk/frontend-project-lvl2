@@ -1,7 +1,7 @@
 {
   "name": "frontend-project-lvl2",
   "version": "0.0.1",
-  "description": "Вычислитель отличий - второй проект профессии фронтенд-программист на Хекслет",
+  "description": "CLI tool that generates difference between two files. Can use yaml, ini, json as input and output in plain text, stylish, json.",
   "type": "module",
   "main": "src/index.js",
   "bin": {
@@ -26,5 +26,12 @@
   "homepage": "https://github.com/dpetruk/frontend-project-lvl2#readme",
   "dependencies": {
     "commander": "^6.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.6.0",
+    "eslint-config-airbnb-base": "^14.2.0",
+    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-jest": "^23.20.0",
+    "jest": "^26.3.0"
   }
 }
