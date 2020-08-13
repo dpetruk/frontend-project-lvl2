@@ -3,12 +3,12 @@
   "version": "0.0.1",
   "description": "CLI tool that generates difference between two files. Can use yaml, ini, json as input and output in plain text, stylish, json.",
   "type": "module",
-  "main": "src/index.js",
+  "main": "src/generateDifference.js",
   "bin": {
     "gendiff": "bin/gendiff.js"
   },
   "scripts": {
-    "test": ""
+    "test": "npx -n --experimental-vm-modules jest"
   },
   "repository": {
     "type": "git",
@@ -25,7 +25,8 @@
   },
   "homepage": "https://github.com/dpetruk/frontend-project-lvl2#readme",
   "dependencies": {
-    "commander": "^6.0.0"
+    "commander": "^6.0.0",
+    "lodash": "^4.17.19"
   },
   "devDependencies": {
     "eslint": "^7.6.0",
