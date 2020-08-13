@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import generateDifference from '../src/index.js';
+import runProgram from '../src/index.js';
 
-const program = generateDifference();
+const program = runProgram();
 
 program.parse(process.argv);
