@@ -1,4 +1,4 @@
-import generateDifference from '../src/generateDifference.js';
+import generateDifference from '../src/index.js';
 
 const filepath1 = './__tests__/files/f1.json';
 const filepath2 = './__tests__/files/f2.json';
