@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-import runProgram from '../src/index.js';
+import runApp from '../src/App.js';
 
-const program = runProgram();
-
-program.parse(process.argv);
+runApp();
