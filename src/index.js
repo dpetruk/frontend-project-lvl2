@@ -1,10 +1,15 @@
 import fs from 'fs';
 import _ from 'lodash';
+import path from 'path';
+import parse from './parsers.js';
 
 const getEntries = (filepath) => {
-  const str = fs.readFileSync(filepath);
-  const obj = JSON.parse(str, 'utf8');
+  const str = fs.readFileSync(filepath, 'utf8');
+  const ext = path.extname(filepath).slice(1).toUpperCase();
+
+  const obj = parse[ext](str);
   const entries = Object.entries(obj);
+
   return entries;
 };
 
