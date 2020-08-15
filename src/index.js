@@ -5,7 +5,7 @@ import parse from './parsers.js';
 
 const getEntries = (filepath) => {
   const str = fs.readFileSync(filepath, 'utf8');
-  const ext = path.extname(filepath).slice(1).toUpperCase();
+  const ext = path.extname(filepath).slice(1);
 
   const obj = parse[ext](str);
   const entries = Object.entries(obj);

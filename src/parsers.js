@@ -1,9 +1,11 @@
 import YAML from 'js-yaml';
+import ini from 'ini';
 
 const parse = {
-  JSON: (string) => JSON.parse(string),
-  YAML: (string) => YAML.safeLoad(string),
-  YML: (string) => YAML.safeLoad(string),
+  ini: (string) => ini.parse(string),
+  json: (string) => JSON.parse(string),
+  yam: (string) => YAML.safeLoad(string),
+  yml: (string) => YAML.safeLoad(string),
 };
 
 export default parse;
