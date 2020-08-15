@@ -14,6 +14,7 @@
 
 
 </details>
+
 <details>
   <summary>compare flat yaml files (example)</summary>
 
@@ -23,3 +24,15 @@
 
 
 </details>
+
+<details>
+  <summary>compare flat ini files (example)</summary>
+
+  ![](/docs/asciinema_compare_ini_flat.gif)
+
+  [Watch this recording at asciinema](https://asciinema.org/a/353533)
+
+
+</details>
+
+
