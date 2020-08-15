@@ -1,7 +1,16 @@
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import path from 'path';
 import generateDifference from '../src/index.js';
 
-const filepath1 = './__tests__/files/f1.json';
-const filepath2 = './__tests__/files/f2.json';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const getFixturesPath = (filename) => path.join(__dirname, '..', '__fixtures__', filename);
+
+const filepath1 = getFixturesPath('f1.json');
+const filepath2 = getFixturesPath('f2.json');
+
 const result = `{
   - follow: false
     host: hexlet.io
