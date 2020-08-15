@@ -6,11 +6,20 @@
 
 ##
 <details>
-  <summary>compare flat files (example)</summary>
+  <summary>compare flat json files (example)</summary>
 
-  ![](/docs/asciinema_compare_flat.gif)
+  ![](/docs/asciinema_compare_json_flat.gif)
 
   [Watch this recording at asciinema](https://asciinema.org/a/353328)
+
+
+</details>
+<details>
+  <summary>compare flat yaml files (example)</summary>
+
+  ![](/docs/asciinema_compare_yaml_flat.gif)
+
+  [Watch this recording at asciinema](https://asciinema.org/a/353530)
 
 
 </details>
