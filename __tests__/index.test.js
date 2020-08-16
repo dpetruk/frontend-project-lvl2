@@ -20,7 +20,7 @@ const expected = `{
 
 test.each([
   ['f1.json', 'f2.json'],
-  ['f1.yml', 'f2.yml'],
+  ['f1.yml', 'f2.yaml'],
   ['f1.ini', 'f2.ini'],
 ])('compare flat files (json, yaml, ini)', (filename1, filename2) => {
   const filepath1 = getFixturesPath(filename1);
