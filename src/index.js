@@ -1,13 +1,13 @@
 import fs from 'fs';
 import _ from 'lodash';
 import path from 'path';
-import parse from './parsers.js';
+import parsers from './parsers.js';
 
 const getEntries = (filepath) => {
   const str = fs.readFileSync(filepath, 'utf8');
   const ext = path.extname(filepath).slice(1);
 
-  const obj = parse[ext](str);
+  const obj = parsers[ext](str);
   const entries = Object.entries(obj);
 
   return entries;
