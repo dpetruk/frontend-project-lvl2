@@ -3,36 +3,95 @@ import _ from 'lodash';
 import path from 'path';
 import parsers from './parsers.js';
 
-const getEntries = (filepath) => {
+const getObject = (filepath) => {
   const str = fs.readFileSync(filepath, 'utf8');
   const ext = path.extname(filepath).slice(1);
 
-  const obj = parsers[ext](str);
-  const entries = Object.entries(obj);
-
-  return entries;
+  return parsers[ext](str);
 };
 
-const format = (array, mark = ' ') => array.map((entry) => `  ${mark} ${entry.join(': ')}`);
-
-const generateDifference = (filepath1, filepath2) => {
-  const entries1 = getEntries(filepath1);
-  const entries2 = getEntries(filepath2);
-
-  const unchanged = _.intersectionWith(entries1, entries2, _.isEqual);
-  const deleted = _.differenceWith(entries1, unchanged, _.isEqual);
-  const added = _.differenceWith(entries2, unchanged, _.isEqual);
-
-  const formattedDiff = _.sortBy(
+const genRawDiff = (obj1, obj2) => {
+  const keys = _.uniq(
     [
-      ...format(unchanged),
-      ...format(deleted, '-'),
-      ...format(added, '+'),
+      ...Object.keys(obj1),
+      ...Object.keys(obj2),
     ],
-    (entry) => entry.slice(4, entry.indexOf(':')),
-  ).join('\n');
+  )
+    .sort();
 
-  return `{\n${formattedDiff}\n}`;
+  const arrWithEntries = keys
+    .flatMap((key) => {
+      const value1 = obj1[key];
+      const value2 = obj2[key];
+
+      if (_.isEqual(value1, value2)) {
+        return { [key]: value1 };
+      }
+
+      if (_.isPlainObject(value1) && _.isPlainObject(value2)) {
+        return { [key]: genRawDiff(value1, value2) };
+      }
+
+      return [
+        _.isUndefined(value1) ? null : { [key]: value1, status: 'deleted' },
+        _.isUndefined(value2) ? null : { [key]: value2, status: 'added' },
+      ]
+        .filter((item) => item);
+    });
+  return arrWithEntries;
 };
 
-export default generateDifference;
+const getArrWithEntries = (obj) => {
+  const arr = Object.entries(obj);
+  const arrWithEntries = arr.map((entry) => {
+    const [key, value] = entry;
+    return { [key]: value };
+  });
+  return arrWithEntries;
+};
+
+const marks = {
+  deleted: '- ',
+  added: '+ ',
+};
+
+const indentShift = 4;
+
+const isArrWithEntries = (item) => _.isArray(item) && _.isPlainObject(item[0]);
+
+const formatToStylish = (arrWithEntries, globalIndentSize = 0) => {
+  const formatEntry = (entry, localIndentSize) => {
+    const [key] = Object.keys(entry);
+    const value = _.isPlainObject(entry[key]) ? getArrWithEntries(entry[key]) : entry[key];
+
+    const mark = marks[entry.status] || '';
+    const indent = ' '.repeat(mark ? localIndentSize - mark.length : localIndentSize);
+    const head = `${indent}${mark}${key}: `;
+    const body = isArrWithEntries(value) ? formatToStylish(value, localIndentSize) : value;
+
+    return `${head}${body}`;
+  };
+
+  const lines = arrWithEntries
+    .map((entry) => formatEntry(entry, globalIndentSize + indentShift))
+    .join('\n');
+
+  const globalIndent = ' '.repeat(globalIndentSize);
+
+  return `{\n${lines}\n${globalIndent}}`;
+};
+
+const formatter = {
+  stylish: formatToStylish,
+  plain: 3,
+};
+
+const genDiff = (filepath1, filepath2, outputFormat = 'stylish') => {
+  const rawDiff = genRawDiff(
+    getObject(filepath1),
+    getObject(filepath2),
+  );
+  return formatter[outputFormat](rawDiff);
+};
+
+export default genDiff;
