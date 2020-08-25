@@ -8,31 +8,31 @@
 <details>
   <summary>compare flat json files (example)</summary>
 
-  ![](/docs/asciinema_compare_json_flat.gif)
-
   [Watch this recording at asciinema](https://asciinema.org/a/353328)
-
+  ![](/docs/asciinema_compare_json_flat.gif)
 
 </details>
 
 <details>
   <summary>compare flat yaml files (example)</summary>
 
-  ![](/docs/asciinema_compare_yaml_flat.gif)
-
   [Watch this recording at asciinema](https://asciinema.org/a/353530)
-
+  ![](/docs/asciinema_compare_yaml_flat.gif)
 
 </details>
 
 <details>
   <summary>compare flat ini files (example)</summary>
 
-  ![](/docs/asciinema_compare_ini_flat.gif)
-
   [Watch this recording at asciinema](https://asciinema.org/a/353533)
-
+  ![](/docs/asciinema_compare_ini_flat.gif)
 
 </details>
 
+<details>
+  <summary>recursive comparison (example)</summary>
 
+  [Watch this recording at asciinema](https://asciinema.org/a/355441)
+  ![](/docs/asciinema_recursive_comparison.gif)
+
+</details>
