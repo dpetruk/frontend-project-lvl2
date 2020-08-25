@@ -1,7 +1,8 @@
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 import path from 'path';
-import generateDifference from '../src/index.js';
+import fs from 'fs';
+import genDiff from '../src/index.js';
 
 const getFixturesPath = (filename) => {
   const __filename = fileURLToPath(import.meta.url);
@@ -9,21 +10,12 @@ const getFixturesPath = (filename) => {
   return path.join(__dirname, '..', '__fixtures__', filename)
 };
 
-const expected = `{
-  - follow: false
-    host: hexlet.io
-  - proxy: 123.234.53.22
-  - timeout: 50
-  + timeout: 20
-  + verbose: true
-}`;
-
 test.each([
-  ['f1.json', 'f2.json'],
-  ['f1.yml', 'f2.yaml'],
-  ['f1.ini', 'f2.ini'],
-])('compare flat files (json, yaml, ini)', (filename1, filename2) => {
+  ['f1_deep.json', 'f2_deep.json'],
+  ['f1_deep.yml', 'f2_deep.yaml'],
+])('compare deep files (json, yml)', (filename1, filename2) => {
+  const expected = fs.readFileSync(getFixturesPath('expected_deep'), 'utf8');
   const filepath1 = getFixturesPath(filename1);
   const filepath2 = getFixturesPath(filename2);
-  expect(generateDifference(filepath1, filepath2)).toEqual(expected);
+  expect(genDiff(filepath1, filepath2)).toEqual(expected);
 });
