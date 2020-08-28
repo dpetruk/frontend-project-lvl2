@@ -2,12 +2,35 @@ import fs from 'fs';
 import _ from 'lodash';
 import path from 'path';
 import parsers from './parsers.js';
+import formatToStylish from './formatters/stylish.js';
+import formatToPlain from './formatters/plain.js';
 
 const getObject = (filepath) => {
   const str = fs.readFileSync(filepath, 'utf8');
   const ext = path.extname(filepath).slice(1);
 
   return parsers[ext](str);
+};
+
+const areBothDeep = (value1, value2) => _.isPlainObject(value1) && _.isPlainObject(value2);
+
+const getEntryWithStatus = (key, value, entryStatus) => {
+  if (_.isUndefined(value)) {
+    return null;
+  }
+
+  return { [key]: value, status: [entryStatus] };
+};
+
+const getDiffEntry = (key, value1, value2) => {
+  if (_.isEqual(value1, value2)) {
+    return { [key]: value1 };
+  }
+  return [
+    getEntryWithStatus(key, value1, 'removed'),
+    getEntryWithStatus(key, value2, 'added'),
+  ]
+    .filter((item) => item);
 };
 
 const genRawDiff = (obj1, obj2) => {
@@ -24,66 +47,29 @@ const genRawDiff = (obj1, obj2) => {
       const value1 = obj1[key];
       const value2 = obj2[key];
 
-      if (_.isEqual(value1, value2)) {
-        return { [key]: value1 };
-      }
-
-      if (_.isPlainObject(value1) && _.isPlainObject(value2)) {
+      if (areBothDeep(value1, value2)) {
         return { [key]: genRawDiff(value1, value2) };
       }
 
-      return [
-        _.isUndefined(value1) ? null : { [key]: value1, status: 'deleted' },
-        _.isUndefined(value2) ? null : { [key]: value2, status: 'added' },
-      ]
-        .filter((item) => item);
+      const diffEntry = getDiffEntry(key, value1, value2);
+
+      return diffEntry;
     });
   return arrWithEntries;
 };
 
-const getArrWithEntries = (obj) => {
-  const arr = Object.entries(obj);
-  const arrWithEntries = arr.map((entry) => {
-    const [key, value] = entry;
-    return { [key]: value };
-  });
-  return arrWithEntries;
-};
-
-const marks = {
-  deleted: '- ',
-  added: '+ ',
-};
-
-const indentShift = 4;
-
-const isArrWithEntries = (item) => _.isArray(item) && _.isPlainObject(item[0]);
-
-const formatToStylish = (arrWithEntries, globalIndentSize = 0) => {
-  const formatEntry = (entry, localIndentSize) => {
-    const [key] = Object.keys(entry);
-    const value = _.isPlainObject(entry[key]) ? getArrWithEntries(entry[key]) : entry[key];
-
-    const mark = marks[entry.status] || '';
-    const indent = ' '.repeat(mark ? localIndentSize - mark.length : localIndentSize);
-    const head = `${indent}${mark}${key}: `;
-    const body = isArrWithEntries(value) ? formatToStylish(value, localIndentSize) : value;
-
-    return `${head}${body}`;
+const format = (name) => {
+  const formatter = {
+    stylish: formatToStylish,
+    plain: formatToPlain,
   };
 
-  const lines = arrWithEntries
-    .map((entry) => formatEntry(entry, globalIndentSize + indentShift))
-    .join('\n');
+  if (!_.has(formatter, name)) {
+    const errorMessage = `Unknown formatter name '${name}'.`;
+    return () => errorMessage;
+  }
 
-  const globalIndent = ' '.repeat(globalIndentSize);
-
-  return `{\n${lines}\n${globalIndent}}`;
-};
-
-const formatter = {
-  stylish: formatToStylish,
-  plain: 3,
+  return formatter[name];
 };
 
 const genDiff = (filepath1, filepath2, outputFormat = 'stylish') => {
@@ -91,7 +77,7 @@ const genDiff = (filepath1, filepath2, outputFormat = 'stylish') => {
     getObject(filepath1),
     getObject(filepath2),
   );
-  return formatter[outputFormat](rawDiff);
+  return format(outputFormat)(rawDiff);
 };
 
 export default genDiff;
