@@ -38,3 +38,11 @@
   ![](/docs/asciinema_recursive_comparison.gif)
 
 </details>
+
+<details>
+  <summary>5. plain format</summary>
+
+  [Watch this recording at asciinema](https://asciinema.org/a/356288)
+  ![](/docs/asciinema_plain_format.gif)
+
+</details>
