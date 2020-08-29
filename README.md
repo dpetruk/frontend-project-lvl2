@@ -46,3 +46,11 @@
   ![](/docs/asciinema_plain_format.gif)
 
 </details>
+
+<details>
+  <summary>6. json format</summary>
+
+  [Watch this recording at asciinema](https://asciinema.org/a/356629)
+  ![](/docs/asciinema_json_format.gif)
+
+</details>
