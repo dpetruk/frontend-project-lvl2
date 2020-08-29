@@ -1,57 +1,43 @@
 import _ from 'lodash';
-import { isArrWithEntries } from './stylish.js';
 
-const getKeysOfUpdatedEntries = (arrWithEntries) => _.uniq(
-  arrWithEntries
-    .map((entry) => _.head(Object.keys(entry)))
-    .filter((el, index, keys) => index !== keys.lastIndexOf(el)),
-);
-
+const isNotUnchanged = (entry) => entry.status !== 'unchanged';
 const formatValue = (value) => {
   if (_.isPlainObject(value)) return '[complex value]';
   return _.isString(value) ? `'${value}'` : value;
 };
 
-const formatProperty = (ancestryOfKey, key) => (ancestryOfKey ? `${ancestryOfKey}.${key}` : `${key}`);
+const getPath = (ancestry, key) => (ancestry ? `${ancestry}.${key}` : `${key}`);
 
-const getLineForStatus = (currentStatus, property, value, obsoleteValue) => {
-  const status = obsoleteValue ? 'updated' : currentStatus;
+const getLineForStatus = (entry, path) => {
+  const { key, status } = entry;
+  const value = formatValue(entry.value);
+
+  const oldValue = formatValue(entry.oldValue);
+  const newValue = formatValue(entry.newValue);
+
   const ending = {
     removed: 'removed',
     added: `added with value: ${value}`,
-    updated: `updated. From ${obsoleteValue} to ${value}`,
+    updated: `updated. From ${oldValue} to ${newValue}`,
   };
-  return `Property '${property}' was ${ending[status]}`;
+
+  return `Property '${getPath(path, key)}' was ${ending[status]}`;
 };
 
 const formatToPlain = (arrWithEntries, ancestry = '') => {
-  const keysOfUpdatedEntries = getKeysOfUpdatedEntries(arrWithEntries);
+  const plainLines = arrWithEntries
+    .filter(isNotUnchanged)
+    .reduce((acc, entry) => {
+      const { path } = acc;
 
-  const plainLines = arrWithEntries.reduce((acc, entry) => {
-    const [key] = Object.keys(entry);
-    const value = formatValue(entry[key]);
+      const { key, status } = entry;
 
-    const property = formatProperty(acc.path, key);
+      const newLines = status
+        ? getLineForStatus(entry, path)
+        : formatToPlain(formatValue(entry.value), getPath(path, key));
 
-    const samePath = { path: acc.path };
-
-    const isObsoleteEntry = keysOfUpdatedEntries.includes(key) && _.isUndefined(acc.obsoleteValue);
-
-    if (isObsoleteEntry) {
-      return { ...acc, obsoleteValue: value };
-    }
-
-    if (_.has(entry, 'status')) {
-      const newLine = getLineForStatus(entry.status, property, value, acc.obsoleteValue);
-      return { lines: [...acc.lines, newLine], ...samePath };
-    }
-
-    if (isArrWithEntries(value)) {
-      return { lines: [...acc.lines, formatToPlain(value, property)], ...samePath };
-    }
-
-    return acc;
-  }, { lines: [], path: ancestry }).lines;
+      return { lines: [...acc.lines, newLines], path };
+    }, { lines: [], path: ancestry }).lines;
 
   return plainLines.join('\n');
 };

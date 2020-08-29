@@ -1,14 +1,27 @@
 import _ from 'lodash';
 
-const indentShift = 4;
+const indentShiftSize = 4;
 
 const isArrWithEntries = (item) => _.isArray(item) && _.isPlainObject(item[0]);
+
+const replaceUpdatedEntries = (arrWithEntries) => arrWithEntries
+  .reduce((acc, entry) => {
+    if (entry.status === 'updated') {
+      const { key } = entry;
+      return [
+        ...acc,
+        { key, value: entry.oldValue, status: 'removed' },
+        { key, value: entry.newValue, status: 'added' },
+      ];
+    }
+    return [...acc, entry];
+  }, []);
 
 const getArrWithEntries = (obj) => {
   const arr = Object.entries(obj);
   const arrWithEntries = arr.map((entry) => {
     const [key, value] = entry;
-    return { [key]: value };
+    return { key, value };
   });
   return arrWithEntries;
 };
@@ -25,21 +38,26 @@ const getMark = (status) => {
 
 const getIndent = (indentSize, mark) => ' '.repeat(mark ? indentSize - mark.length : indentSize);
 
+const getHead = (entry, localIndentSize) => {
+  const { key, status } = entry;
+  const mark = getMark(status);
+  const indent = getIndent(localIndentSize, mark);
+
+  return `${indent}${mark}${key}: `;
+};
+
 const formatToStylish = (arrWithEntries, globalIndentSize = 0) => {
-  const formatEntry = (entry, localIndentSize) => {
-    const [key] = Object.keys(entry);
-    const value = getValidValue(entry[key]);
+  const localIndentSize = globalIndentSize + indentShiftSize;
 
-    const mark = getMark(entry.status);
-    const indent = getIndent(localIndentSize, mark);
-    const head = `${indent}${mark}${key}: `;
-    const body = isArrWithEntries(value) ? formatToStylish(value, localIndentSize) : value;
+  const lines = replaceUpdatedEntries(arrWithEntries)
+    .map((entry) => {
+      const head = getHead(entry, localIndentSize);
 
-    return `${head}${body}`;
-  };
+      const value = getValidValue(entry.value);
+      const body = isArrWithEntries(value) ? formatToStylish(value, localIndentSize) : value;
 
-  const lines = arrWithEntries
-    .map((entry) => formatEntry(entry, globalIndentSize + indentShift))
+      return `${head}${body}`;
+    })
     .join('\n');
 
   const globalIndent = getIndent(globalIndentSize);
