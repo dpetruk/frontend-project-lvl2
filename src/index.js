@@ -12,25 +12,34 @@ const getObject = (filepath) => {
   return parsers[ext](str);
 };
 
-const areBothDeep = (value1, value2) => _.isPlainObject(value1) && _.isPlainObject(value2);
+const areDeep = (value1, value2) => _.isPlainObject(value1) && _.isPlainObject(value2);
 
-const getEntryWithStatus = (key, value, entryStatus) => {
-  if (_.isUndefined(value)) {
-    return null;
-  }
+const identifyDefined = (value1, value2) => {
+  if (_.isUndefined(value2)) return 'only first value is defined';
 
-  return { [key]: value, status: [entryStatus] };
+  return _.isUndefined(value1) ? 'only second value is defined' : 'both are defined';
 };
 
-const getDiffEntry = (key, value1, value2) => {
-  if (_.isEqual(value1, value2)) {
-    return { [key]: value1 };
-  }
-  return [
-    getEntryWithStatus(key, value1, 'removed'),
-    getEntryWithStatus(key, value2, 'added'),
-  ]
-    .filter((item) => item);
+const getStatus = (value1, value2) => {
+  if (_.isEqual(value1, value2)) return 'unchanged';
+  const statusForDefined = {
+    'only first value is defined': 'removed',
+    'only second value is defined': 'added',
+    'both are defined': 'updated',
+  };
+  return statusForDefined[identifyDefined(value1, value2)];
+};
+
+const getEntry = (val1, val2) => {
+  const values = {
+    unchanged: { value: val1 },
+    removed: { value: val1 },
+    added: { value: val2 },
+    updated: { oldValue: val1, newValue: val2 },
+  };
+  const status = getStatus(val1, val2);
+
+  return { ...values[status], status };
 };
 
 const genRawDiff = (obj1, obj2) => {
@@ -44,32 +53,29 @@ const genRawDiff = (obj1, obj2) => {
 
   const arrWithEntries = keys
     .flatMap((key) => {
-      const value1 = obj1[key];
-      const value2 = obj2[key];
+      const val1 = obj1[key];
+      const val2 = obj2[key];
 
-      if (areBothDeep(value1, value2)) {
-        return { [key]: genRawDiff(value1, value2) };
-      }
+      const body = areDeep(val1, val2) ? { value: genRawDiff(val1, val2) } : getEntry(val1, val2);
 
-      const diffEntry = getDiffEntry(key, value1, value2);
-
-      return diffEntry;
+      return { key, ...body };
     });
   return arrWithEntries;
 };
 
-const format = (name) => {
-  const formatter = {
-    stylish: formatToStylish,
-    plain: formatToPlain,
-  };
+const formatters = {
+  stylish: formatToStylish,
+  plain: formatToPlain,
+  json: (rawDiff) => JSON.stringify(rawDiff),
+};
 
-  if (!_.has(formatter, name)) {
+const format = (name) => {
+  if (!_.has(formatters, name)) {
     const errorMessage = `Unknown formatter name '${name}'.`;
     return () => errorMessage;
   }
 
-  return formatter[name];
+  return formatters[name];
 };
 
 const genDiff = (filepath1, filepath2, outputFormat = 'stylish') => {
