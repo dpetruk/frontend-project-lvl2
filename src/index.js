@@ -1,48 +1,45 @@
 import fs from 'fs';
 import _ from 'lodash';
 import path from 'path';
-import parsers from './parsers.js';
-import formatToStylish from './formatters/stylish.js';
-import formatToPlain from './formatters/plain.js';
+import selectParser from './parsers.js';
+import getStylish from './formatters/stylish.js';
+import getPlain from './formatters/plain.js';
 
-const getObject = (filepath) => {
+const getObj = (filepath) => {
   const str = fs.readFileSync(filepath, 'utf8');
-  const ext = path.extname(filepath).slice(1);
+  const extension = _.trimStart(path.extname(filepath), '.');
+  const parse = selectParser(extension);
 
-  return parsers[ext](str);
+  return parse(str);
 };
 
 const areDeep = (value1, value2) => _.isPlainObject(value1) && _.isPlainObject(value2);
 
-const identifyDefined = (value1, value2) => {
-  if (_.isUndefined(value2)) return 'only first value is defined';
+const genTypeForDifferent = (value1, value2) => {
+  if (_.isUndefined(value2)) return 'removed';
 
-  return _.isUndefined(value1) ? 'only second value is defined' : 'both are defined';
+  return _.isUndefined(value1) ? 'added' : 'updated';
 };
 
-const getStatus = (value1, value2) => {
+const genType = (value1, value2) => {
   if (_.isEqual(value1, value2)) return 'unchanged';
-  const statusForDefined = {
-    'only first value is defined': 'removed',
-    'only second value is defined': 'added',
-    'both are defined': 'updated',
-  };
-  return statusForDefined[identifyDefined(value1, value2)];
+
+  return genTypeForDifferent(value1, value2);
 };
 
-const getEntry = (val1, val2) => {
+const genEntry = (val1, val2) => {
   const values = {
     unchanged: { value: val1 },
     removed: { value: val1 },
     added: { value: val2 },
     updated: { oldValue: val1, newValue: val2 },
   };
-  const status = getStatus(val1, val2);
+  const type = genType(val1, val2);
 
-  return { ...values[status], status };
+  return { type, ...values[type] };
 };
 
-const genRawDiff = (obj1, obj2) => {
+const genIntDiff = (obj1, obj2) => {
   const keys = _.uniq(
     [
       ...Object.keys(obj1),
@@ -50,26 +47,26 @@ const genRawDiff = (obj1, obj2) => {
     ],
   )
     .sort();
-
   const arrWithEntries = keys
     .flatMap((key) => {
-      const val1 = obj1[key];
-      const val2 = obj2[key];
+      const v1 = obj1[key];
+      const v2 = obj2[key];
 
-      const body = areDeep(val1, val2) ? { value: genRawDiff(val1, val2) } : getEntry(val1, val2);
+      const body = areDeep(v1, v2) ? { type: 'parent', children: genIntDiff(v1, v2) } : genEntry(v1, v2);
 
       return { key, ...body };
     });
+
   return arrWithEntries;
 };
 
 const formatters = {
-  stylish: formatToStylish,
-  plain: formatToPlain,
-  json: (rawDiff) => JSON.stringify(rawDiff),
+  stylish: getStylish,
+  plain: getPlain,
+  json: (intDiff) => JSON.stringify(intDiff),
 };
 
-const format = (name) => {
+const selectFormatter = (name) => {
   if (!_.has(formatters, name)) {
     const errorMessage = `Unknown formatter name '${name}'.`;
     return () => errorMessage;
@@ -79,11 +76,14 @@ const format = (name) => {
 };
 
 const genDiff = (filepath1, filepath2, outputFormat = 'stylish') => {
-  const rawDiff = genRawDiff(
-    getObject(filepath1),
-    getObject(filepath2),
-  );
-  return format(outputFormat)(rawDiff);
+  const obj1 = getObj(filepath1);
+  const obj2 = getObj(filepath2);
+
+  const intDiff = genIntDiff(obj1, obj2);
+
+  const genFormattedDiff = selectFormatter(outputFormat);
+
+  return genFormattedDiff(intDiff);
 };
 
 export default genDiff;

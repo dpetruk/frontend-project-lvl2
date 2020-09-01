@@ -1,19 +1,23 @@
 import _ from 'lodash';
 
-const isNotUnchanged = (entry) => entry.status !== 'unchanged';
-const formatValue = (value) => {
+const isNotUnchanged = (entry) => entry.type !== 'unchanged';
+
+const genNewPath = (path, key) => (path ? `${path}.${key}` : `${key}`);
+
+const isParent = (type) => type === 'parent';
+
+const genValid = (value) => {
   if (_.isPlainObject(value)) return '[complex value]';
+
   return _.isString(value) ? `'${value}'` : value;
 };
 
-const getPath = (ancestry, key) => (ancestry ? `${ancestry}.${key}` : `${key}`);
+const genLine = (entry, newPath) => {
+  const { type } = entry;
+  const value = genValid(entry.value);
 
-const getLineForStatus = (entry, path) => {
-  const { key, status } = entry;
-  const value = formatValue(entry.value);
-
-  const oldValue = formatValue(entry.oldValue);
-  const newValue = formatValue(entry.newValue);
+  const oldValue = genValid(entry.oldValue);
+  const newValue = genValid(entry.newValue);
 
   const ending = {
     removed: 'removed',
@@ -21,25 +25,27 @@ const getLineForStatus = (entry, path) => {
     updated: `updated. From ${oldValue} to ${newValue}`,
   };
 
-  return `Property '${getPath(path, key)}' was ${ending[status]}`;
+  return `Property '${newPath}' was ${ending[type]}`;
 };
 
-const formatToPlain = (arrWithEntries, ancestry = '') => {
-  const plainLines = arrWithEntries
+const formatList = (list, ancestry = '') => {
+  const plainLines = list
     .filter(isNotUnchanged)
     .reduce((acc, entry) => {
+      const { key, type } = entry;
       const { path } = acc;
+      const newPath = genNewPath(path, key);
 
-      const { key, status } = entry;
+      const str = isParent(type) ? formatList(entry.children, newPath) : genLine(entry, newPath);
 
-      const newLines = status
-        ? getLineForStatus(entry, path)
-        : formatToPlain(formatValue(entry.value), getPath(path, key));
+      return { lines: [...acc.lines, str], path };
+    }, { lines: [], path: ancestry })
+    .lines
+    .join('\n');
 
-      return { lines: [...acc.lines, newLines], path };
-    }, { lines: [], path: ancestry }).lines;
-
-  return plainLines.join('\n');
+  return plainLines;
 };
 
-export default formatToPlain;
+const getPlain = (diff) => formatList(diff);
+
+export default getPlain;
