@@ -8,4 +8,6 @@ const parsers = {
   yml: (string) => YAML.safeLoad(string),
 };
 
-export default parsers;
+const selectParser = (extension) => parsers[extension];
+
+export default selectParser;
