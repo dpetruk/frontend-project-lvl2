@@ -26,7 +26,7 @@ const getMark = (type) => {
   return marks[type] || '';
 };
 
-const genIndent = (indentSize, mark) => ' '.repeat(mark ? indentSize - mark.length : indentSize);
+const genIndent = (indentSize, mark = '') => ' '.repeat(indentSize - mark.length);
 
 const getHead = (entry, localIndentSize) => {
   const { key, type } = entry;
