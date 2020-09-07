@@ -13,48 +13,33 @@ const getObj = (filepath) => {
   return parse(str);
 };
 
-const areDeep = (value1, value2) => _.isPlainObject(value1) && _.isPlainObject(value2);
-
-const genTypeForDifferent = (value1, value2) => {
-  if (_.isUndefined(value2)) return 'removed';
-
-  return _.isUndefined(value1) ? 'added' : 'updated';
-};
-
-const genType = (value1, value2) => {
-  if (_.isEqual(value1, value2)) return 'unchanged';
-
-  return genTypeForDifferent(value1, value2);
-};
-
-const genEntry = (val1, val2) => {
-  const values = {
-    unchanged: { value: val1 },
-    removed: { value: val1 },
-    added: { value: val2 },
-    updated: { oldValue: val1, newValue: val2 },
-  };
-  const type = genType(val1, val2);
-
-  return { type, ...values[type] };
-};
-
 const genIntDiff = (obj1, obj2) => {
-  const keys = _.uniq(
-    [
-      ...Object.keys(obj1),
-      ...Object.keys(obj2),
-    ],
-  )
-    .sort();
+  const keys = Object.keys({ ...obj1, ...obj2 }).sort();
+
   const arrWithEntries = keys
     .flatMap((key) => {
-      const v1 = obj1[key];
-      const v2 = obj2[key];
+      const val1 = obj1[key];
+      const val2 = obj2[key];
 
-      const body = areDeep(v1, v2) ? { type: 'parent', children: genIntDiff(v1, v2) } : genEntry(v1, v2);
+      if (_.isPlainObject(val1) && _.isPlainObject(val2)) {
+        return { key, type: 'parent', children: genIntDiff(val1, val2) };
+      }
 
-      return { key, ...body };
+      if (_.isEqual(val1, val2)) {
+        return { key, type: 'unchanged', value: val1 };
+      }
+
+      if (_.isUndefined(val2)) {
+        return { key, type: 'removed', value: val1 };
+      }
+
+      if (_.isUndefined(val1)) {
+        return { key, type: 'added', value: val2 };
+      }
+
+      return {
+        key, type: 'updated', oldValue: val1, newValue: val2,
+      };
     });
 
   return arrWithEntries;
@@ -63,7 +48,7 @@ const genIntDiff = (obj1, obj2) => {
 const formatters = {
   stylish: getStylish,
   plain: getPlain,
-  json: (intDiff) => JSON.stringify(intDiff),
+  json: JSON.stringify,
 };
 
 const selectFormatter = (name) => {

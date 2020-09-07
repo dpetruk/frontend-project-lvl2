@@ -28,14 +28,6 @@ const getMark = (type) => {
 
 const genIndent = (indentSize, mark = '') => ' '.repeat(indentSize - mark.length);
 
-const getHead = (entry, localIndentSize) => {
-  const { key, type } = entry;
-  const mark = getMark(type);
-  const indent = genIndent(localIndentSize, mark);
-
-  return `${indent}${mark}${key}: `;
-};
-
 const getList = (obj) => {
   const list = Object.entries(obj)
     .map((entry) => {
@@ -58,25 +50,25 @@ const isList = (value) => _.isPlainObject(_.head(value));
 
 const formatList = (list, globalIndentSize = 0) => {
   const localIndentSize = globalIndentSize + indentShiftSize;
+  const newList = replaceUpdatedEntries(list);
 
-  const lines = replaceUpdatedEntries(list)
+  const linesArr = newList
     .map((entry) => {
-      const head = getHead(entry, localIndentSize);
+      const { key, type } = entry;
+      const mark = getMark(type);
+      const indent = genIndent(localIndentSize, mark);
+      const head = `${indent}${mark}${key}: `;
 
       const value = getValidValue(entry);
       const body = isList(value) ? formatList(value, localIndentSize) : value;
 
-      const str = `${head}${body}`;
+      return `${head}${body}`;
+    });
 
-      return str;
-    })
-    .join('\n');
-
+  const lines = linesArr.join('\n');
   const globalIndent = genIndent(globalIndentSize);
 
-  const stylishLines = `{\n${lines}\n${globalIndent}}`;
-
-  return stylishLines;
+  return `{\n${lines}\n${globalIndent}}`;
 };
 
 const getStylish = (diff) => formatList(diff);

@@ -1,11 +1,5 @@
 import _ from 'lodash';
 
-const isNotUnchanged = (entry) => entry.type !== 'unchanged';
-
-const genNewPath = (path, key) => (path ? `${path}.${key}` : `${key}`);
-
-const isParent = (type) => type === 'parent';
-
 const genValid = (value) => {
   if (_.isPlainObject(value)) return '[complex value]';
 
@@ -29,19 +23,20 @@ const genLine = (entry, newPath) => {
 };
 
 const formatList = (list, ancestry = '') => {
-  const plainLines = list
-    .filter(isNotUnchanged)
+  const plainLinesArr = list
+    .filter((entry) => entry.type !== 'unchanged')
     .reduce((acc, entry) => {
       const { key, type } = entry;
-      const { path } = acc;
-      const newPath = genNewPath(path, key);
+      const { path, lines } = acc;
+      const newPath = path ? `${path}.${key}` : `${key}`;
 
-      const str = isParent(type) ? formatList(entry.children, newPath) : genLine(entry, newPath);
+      const str = (type === 'parent') ? formatList(entry.children, newPath) : genLine(entry, newPath);
 
-      return { lines: [...acc.lines, str], path };
+      return { lines: [...lines, str], path };
     }, { lines: [], path: ancestry })
-    .lines
-    .join('\n');
+    .lines;
+
+  const plainLines = plainLinesArr.join('\n');
 
   return plainLines;
 };
