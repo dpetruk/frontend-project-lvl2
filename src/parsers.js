@@ -13,11 +13,13 @@ const fixNumParsing = (obj) => {
     }, {});
 };
 
+const parseIniCorrectly = (string) => fixNumParsing(ini.parse(string));
+
 const parsers = {
-  ini: (string) => fixNumParsing(ini.parse(string)),
-  json: (string) => JSON.parse(string),
-  yaml: (string) => YAML.safeLoad(string),
-  yml: (string) => YAML.safeLoad(string),
+  ini: parseIniCorrectly,
+  json: JSON.parse,
+  yaml: YAML.safeLoad,
+  yml: YAML.safeLoad,
 };
 
 const selectParser = (extension) => parsers[extension];
