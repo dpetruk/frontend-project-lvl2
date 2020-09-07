@@ -20,7 +20,7 @@ test.each([
   ['json', 'json'],
   ['yml', 'json'],
   ['ini', 'json'],
-])(`compare deep files (%s, %s with %s)`, (inputExt, formatter) => {
+])(`compare deep files (input: %s, output: %s)`, (inputExt, formatter) => {
   const filepath1 = getFixturesPath(`f1.${inputExt}`);
   const filepath2 = getFixturesPath(`f2.${inputExt}`);
 
