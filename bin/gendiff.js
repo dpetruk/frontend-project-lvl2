@@ -1,4 +1,4 @@
 #!/usr/bin/env node
-import runApp from '../src/App.js';
+import runApp from '../src/app.js';
 
 runApp();
