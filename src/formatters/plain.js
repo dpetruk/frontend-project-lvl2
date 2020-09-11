@@ -1,45 +1,43 @@
 import _ from 'lodash';
 
-const genValid = (value) => {
+const getValidValue = (value) => {
   if (_.isPlainObject(value)) return '[complex value]';
 
   return _.isString(value) ? `'${value}'` : value;
 };
 
-const genLine = (entry, newPath) => {
-  const { type } = entry;
-  const value = genValid(entry.value);
+const formatList = (list, oldPath = '') => list
+  .map((entry) => {
+    const { key, type } = entry;
+    const newPath = oldPath ? `${oldPath}.${key}` : `${key}`;
 
-  const oldValue = genValid(entry.oldValue);
-  const newValue = genValid(entry.newValue);
+    switch (type) {
+      case 'removed':
+        return `Property '${newPath}' was removed`;
 
-  const ending = {
-    removed: 'removed',
-    added: `added with value: ${value}`,
-    updated: `updated. From ${oldValue} to ${newValue}`,
-  };
+      case 'added': {
+        const value = getValidValue(entry.value);
+        return `Property '${newPath}' was added with value: ${value}`;
+      }
 
-  return `Property '${newPath}' was ${ending[type]}`;
-};
+      case 'updated': {
+        const oldValue = getValidValue(entry.oldValue);
+        const newValue = getValidValue(entry.newValue);
+        return `Property '${newPath}' was updated. From ${oldValue} to ${newValue}`;
+      }
 
-const formatList = (list, ancestry = '') => {
-  const plainLinesArr = list
-    .filter((entry) => entry.type !== 'unchanged')
-    .reduce((acc, entry) => {
-      const { key, type } = entry;
-      const { path, lines } = acc;
-      const newPath = path ? `${path}.${key}` : `${key}`;
+      case 'unchanged':
+        return null;
 
-      const str = (type === 'parent') ? formatList(entry.children, newPath) : genLine(entry, newPath);
+      case 'parent':
+        return formatList(entry.children, newPath);
 
-      return { lines: [...lines, str], path };
-    }, { lines: [], path: ancestry })
-    .lines;
-
-  const plainLines = plainLinesArr.join('\n');
-
-  return plainLines;
-};
+      default:
+        throw new Error(`Unknown type '${type}'`);
+    }
+  })
+  .filter((line) => line)
+  .join('\n');
 
 const getPlain = (diff) => formatList(diff);
 

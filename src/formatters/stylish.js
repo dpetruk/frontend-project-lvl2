@@ -1,32 +1,9 @@
 import _ from 'lodash';
 
 const indentShiftSize = 4;
-
-const replaceUpdatedEntries = (list) => list
-  .reduce((acc, entry) => {
-    if (entry.type === 'updated') {
-      const { key } = entry;
-      return [
-        ...acc,
-        { key, value: entry.oldValue, type: 'removed' },
-        { key, value: entry.newValue, type: 'added' },
-      ];
-    }
-
-    return [...acc, entry];
-  }, []);
-
-const getMark = (type) => {
-  const marks = {
-    removed: '- ',
-    added: '+ ',
-    unchanged: '',
-  };
-
-  return marks[type] || '';
-};
-
-const genIndent = (indentSize, mark = '') => ' '.repeat(indentSize - mark.length);
+const spaceChar = ' ';
+const minusMark = '- ';
+const plusMark = '+ ';
 
 const getList = (obj) => {
   const list = Object.entries(obj)
@@ -38,35 +15,62 @@ const getList = (obj) => {
   return list;
 };
 
-const getValidValue = (entry) => {
-  const { type, value } = entry;
-
-  if (type === 'parent') return entry.children;
-
-  return _.isPlainObject(value) ? getList(value) : value;
-};
-
-const isList = (value) => _.isPlainObject(_.head(value));
-
 const formatList = (list, globalIndentSize = 0) => {
   const localIndentSize = globalIndentSize + indentShiftSize;
-  const newList = replaceUpdatedEntries(list);
 
-  const linesArr = newList
+  const getValidValue = (val) => {
+    if (_.isPlainObject(val)) {
+      const noTypeList = getList(val);
+      return formatList(noTypeList, localIndentSize);
+    }
+    return val;
+  };
+
+  const lines = list
     .map((entry) => {
       const { key, type } = entry;
-      const mark = getMark(type);
-      const indent = genIndent(localIndentSize, mark);
-      const head = `${indent}${mark}${key}: `;
 
-      const value = getValidValue(entry);
-      const body = isList(value) ? formatList(value, localIndentSize) : value;
+      switch (type) {
+        case 'removed': {
+          const removedValue = getValidValue(entry.value);
+          return `${_.padStart(minusMark, localIndentSize)}${key}: ${removedValue}`;
+        }
 
-      return `${head}${body}`;
-    });
+        case 'added': {
+          const addedValue = getValidValue(entry.value);
+          return `${_.padStart(plusMark, localIndentSize)}${key}: ${addedValue}`;
+        }
 
-  const lines = linesArr.join('\n');
-  const globalIndent = genIndent(globalIndentSize);
+        case 'updated': {
+          const oldValue = getValidValue(entry.oldValue);
+          const newValue = getValidValue(entry.newValue);
+
+          const oldEntry = `${_.padStart(minusMark, localIndentSize)}${key}: ${oldValue}`;
+          const newEntry = `${_.padStart(plusMark, localIndentSize)}${key}: ${newValue}`;
+
+          return `${oldEntry}\n${newEntry}`;
+        }
+
+        case 'unchanged': {
+          const unchangedValue = getValidValue(entry.value);
+          return `${spaceChar.repeat(localIndentSize)}${key}: ${unchangedValue}`;
+        }
+
+        case 'parent': {
+          const { children } = entry;
+          const parentValue = formatList(children, localIndentSize);
+          return `${spaceChar.repeat(localIndentSize)}${key}: ${parentValue}`;
+        }
+
+        default: {
+          const noTypeValue = getValidValue(entry.value);
+          return `${spaceChar.repeat(localIndentSize)}${key}: ${noTypeValue}`;
+        }
+      }
+    })
+    .join('\n');
+
+  const globalIndent = spaceChar.repeat(globalIndentSize);
 
   return `{\n${lines}\n${globalIndent}}`;
 };
