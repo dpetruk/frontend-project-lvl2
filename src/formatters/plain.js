@@ -6,7 +6,7 @@ const getValidValue = (value) => {
   return _.isString(value) ? `'${value}'` : value;
 };
 
-const formatList = (list, oldPath = '') => list
+const formatListToPlain = (list, oldPath = '') => list
   .map((entry) => {
     const { key, type } = entry;
     const newPath = oldPath ? `${oldPath}.${key}` : `${key}`;
@@ -30,7 +30,7 @@ const formatList = (list, oldPath = '') => list
         return null;
 
       case 'parent':
-        return formatList(entry.children, newPath);
+        return formatListToPlain(entry.children, newPath);
 
       default:
         throw new Error(`Unknown type '${type}'`);
@@ -39,6 +39,6 @@ const formatList = (list, oldPath = '') => list
   .filter((line) => line)
   .join('\n');
 
-const getPlain = (diff) => formatList(diff);
+const getPlain = (diff) => formatListToPlain(diff);
 
 export default getPlain;

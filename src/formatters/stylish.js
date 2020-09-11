@@ -15,13 +15,13 @@ const getList = (obj) => {
   return list;
 };
 
-const formatList = (list, globalIndentSize = 0) => {
+const formatListToStylish = (list, globalIndentSize = 0) => {
   const localIndentSize = globalIndentSize + indentShiftSize;
 
   const getValidValue = (val) => {
     if (_.isPlainObject(val)) {
       const noTypeList = getList(val);
-      return formatList(noTypeList, localIndentSize);
+      return formatListToStylish(noTypeList, localIndentSize);
     }
     return val;
   };
@@ -58,7 +58,7 @@ const formatList = (list, globalIndentSize = 0) => {
 
         case 'parent': {
           const { children } = entry;
-          const parentValue = formatList(children, localIndentSize);
+          const parentValue = formatListToStylish(children, localIndentSize);
           return `${spaceChar.repeat(localIndentSize)}${key}: ${parentValue}`;
         }
 
@@ -75,6 +75,6 @@ const formatList = (list, globalIndentSize = 0) => {
   return `{\n${lines}\n${globalIndent}}`;
 };
 
-const getStylish = (diff) => formatList(diff);
+const getStylish = (diff) => formatListToStylish(diff);
 
 export default getStylish;
