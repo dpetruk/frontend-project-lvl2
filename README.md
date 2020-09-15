@@ -95,7 +95,7 @@ gendiff <filename1> <filename2>
 import genDiff from 'gendiff';
 ```
 ```javascript
-// outputFormat can be 'stylish', 'plain' or 'json'. No argument means 'stylish'.
+// outputFormat can be 'stylish', 'plain' or 'json'. Default option is 'stylish'.
 const diff = genDiff(filepath1, filepath2, outputFormat);
 
 console.log(diff);
