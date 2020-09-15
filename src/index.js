@@ -17,7 +17,7 @@ const genInternalDiff = (obj1, obj2) => {
   const keys = _.union(_.keys(obj1), _.keys(obj2)).sort();
 
   const entries = keys
-    .flatMap((key) => {
+    .map((key) => {
       const val1 = obj1[key];
       const val2 = obj2[key];
 
