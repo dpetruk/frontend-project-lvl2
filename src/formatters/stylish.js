@@ -9,7 +9,7 @@ const getList = (obj) => {
   const list = Object.entries(obj)
     .map((entry) => {
       const [key, value] = entry;
-      return { key, value };
+      return { key, type: 'embedded in value', value };
     });
 
   return list;
@@ -19,11 +19,11 @@ const formatListToStylish = (list, globalIndentSize = 0) => {
   const localIndentSize = globalIndentSize + indentShiftSize;
 
   const getValidValue = (val) => {
-    if (_.isPlainObject(val)) {
-      const noTypeList = getList(val);
-      return formatListToStylish(noTypeList, localIndentSize);
+    if (!_.isPlainObject(val)) {
+      return val;
     }
-    return val;
+    const embeddedList = getList(val);
+    return formatListToStylish(embeddedList, localIndentSize);
   };
 
   const lines = list
@@ -62,9 +62,11 @@ const formatListToStylish = (list, globalIndentSize = 0) => {
           return `${spaceChar.repeat(localIndentSize)}${key}: ${parentValue}`;
         }
 
+        case 'embedded in value':
+          return `${spaceChar.repeat(localIndentSize)}${key}: ${getValidValue(entry.value)}`;
+
         default: {
-          const noTypeValue = getValidValue(entry.value);
-          return `${spaceChar.repeat(localIndentSize)}${key}: ${noTypeValue}`;
+          throw new Error(`Unknown type '${type}'`);
         }
       }
     })
