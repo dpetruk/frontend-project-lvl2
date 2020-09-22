@@ -5,47 +5,47 @@ const spaceChar = ' ';
 const minusMark = '- ';
 const plusMark = '+ ';
 
-const getList = (obj) => {
-  const list = Object.entries(obj)
+const formatValue = (val, globalIndentSize) => {
+  if (!_.isPlainObject(val)) {
+    return val;
+  }
+
+  const localIndentSize = globalIndentSize + indentShiftSize;
+
+  const lines = Object.entries(val)
     .map((entry) => {
       const [key, value] = entry;
-      return { key, value };
-    });
+      const formattedValue = formatValue(value, localIndentSize);
+      return `${spaceChar.repeat(localIndentSize)}${key}: ${formattedValue}`;
+    })
+    .join('\n');
 
-  return list;
+  const globalIndent = spaceChar.repeat(globalIndentSize);
+
+  return `{\n${lines}\n${globalIndent}}`;
 };
 
 const formatListToStylish = (list, globalIndentSize = 0) => {
   const localIndentSize = globalIndentSize + indentShiftSize;
 
-  const formatValue = (val) => {
-    if (!_.isPlainObject(val)) {
-      return val;
-    }
-    return formatListToStylish(getList(val), localIndentSize);
-  };
-
   const lines = list
     .map((entry) => {
       const { key, type } = entry;
-      if (!type) {
-        return `${spaceChar.repeat(localIndentSize)}${key}: ${formatValue(entry.value)}`;
-      }
 
       switch (type) {
         case 'removed': {
-          const removedValue = formatValue(entry.value);
+          const removedValue = formatValue(entry.value, localIndentSize);
           return `${_.padStart(minusMark, localIndentSize)}${key}: ${removedValue}`;
         }
 
         case 'added': {
-          const addedValue = formatValue(entry.value);
+          const addedValue = formatValue(entry.value, localIndentSize);
           return `${_.padStart(plusMark, localIndentSize)}${key}: ${addedValue}`;
         }
 
         case 'updated': {
-          const oldValue = formatValue(entry.oldValue);
-          const newValue = formatValue(entry.newValue);
+          const oldValue = formatValue(entry.oldValue, localIndentSize);
+          const newValue = formatValue(entry.newValue, localIndentSize);
 
           const oldEntry = `${_.padStart(minusMark, localIndentSize)}${key}: ${oldValue}`;
           const newEntry = `${_.padStart(plusMark, localIndentSize)}${key}: ${newValue}`;
@@ -54,7 +54,7 @@ const formatListToStylish = (list, globalIndentSize = 0) => {
         }
 
         case 'unchanged': {
-          const unchangedValue = formatValue(entry.value);
+          const unchangedValue = formatValue(entry.value, localIndentSize);
           return `${spaceChar.repeat(localIndentSize)}${key}: ${unchangedValue}`;
         }
 
