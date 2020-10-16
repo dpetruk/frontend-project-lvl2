@@ -8,13 +8,12 @@ const formatters = {
   json: JSON.stringify,
 };
 
-const selectFormatter = (name) => {
-  if (!_.has(formatters, name)) {
-    const errorMessage = `Unknown formatter name '${name}'.`;
-    return () => errorMessage;
+const selectFormatter = (format) => {
+  if (!_.has(formatters, format)) {
+    throw new Error(`Unknown format '${format}'.`);
   }
 
-  return formatters[name];
+  return formatters[format];
 };
 
 export default selectFormatter;
