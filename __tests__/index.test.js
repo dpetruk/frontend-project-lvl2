@@ -26,5 +26,5 @@ test.each([
 
   const expected = fs.readFileSync(getFixturesPath(`expected_${formatter}`), 'utf8');
 
-  expect(genDiff(filepath1, filepath2, formatter)).toEqual(expected);
+  expect(genDiff(filepath1, filepath2, formatter)).toBe(expected);
 });
