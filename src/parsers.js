@@ -2,15 +2,16 @@ import YAML from 'js-yaml';
 import ini from 'ini';
 import _ from 'lodash';
 
-const getValidValue = (value) => (/^[0-9]+$/.test(value) ? Number(value) : value);
+const isNumberString = (value) => /^\d+$/.test(value);
 
-const fixNumParsing = (obj) => _.keys(obj)
+const convertNumStringsToNums = (parsedContent) => _.keys(parsedContent)
   .reduce((acc, key) => {
-    const value = getValidValue(obj[key]);
-    return { ...acc, [key]: _.isPlainObject(value) ? fixNumParsing(value) : value };
+    const parsedValue = parsedContent[key];
+    const value = isNumberString(parsedValue) ? Number(parsedValue) : parsedValue;
+    return { ...acc, [key]: _.isPlainObject(value) ? convertNumStringsToNums(value) : value };
   }, {});
 
-const parseIniCorrectly = (string) => fixNumParsing(ini.parse(string));
+const parseIniCorrectly = (string) => convertNumStringsToNums(ini.parse(string));
 
 const parsers = {
   ini: parseIniCorrectly,
