@@ -12,9 +12,8 @@ const formatValue = (val, globalIndentSize) => {
 
   const localIndentSize = globalIndentSize + indentShiftSize;
 
-  const lines = Object.entries(val)
-    .map((entry) => {
-      const [key, value] = entry;
+  const lines = _.entries(val)
+    .map(([key, value]) => {
       const formattedValue = formatValue(value, localIndentSize);
       return `${spaceChar.repeat(localIndentSize)}${key}: ${formattedValue}`;
     })
@@ -25,57 +24,37 @@ const formatValue = (val, globalIndentSize) => {
   return `{\n${lines}\n${globalIndent}}`;
 };
 
-const formatListToStylish = (list, globalIndentSize = 0) => {
+const formatListToStylish = (list, globalIndentSize) => {
   const localIndentSize = globalIndentSize + indentShiftSize;
 
   const lines = list
-    .map((entry) => {
-      const { key, type } = entry;
-
+    .map(({
+      type, key, value, children,
+    }) => {
       switch (type) {
-        case 'removed': {
-          const removedValue = formatValue(entry.value, localIndentSize);
-          return `${_.padStart(minusMark, localIndentSize)}${key}: ${removedValue}`;
-        }
-
-        case 'added': {
-          const addedValue = formatValue(entry.value, localIndentSize);
-          return `${_.padStart(plusMark, localIndentSize)}${key}: ${addedValue}`;
-        }
-
+        case 'removed':
+          return `${minusMark.padStart(localIndentSize)}${key}: ${formatValue(value, localIndentSize)}`;
+        case 'added':
+          return `${plusMark.padStart(localIndentSize)}${key}: ${formatValue(value, localIndentSize)}`;
         case 'updated': {
-          const oldValue = formatValue(entry.oldValue, localIndentSize);
-          const newValue = formatValue(entry.newValue, localIndentSize);
-
-          const oldEntry = `${_.padStart(minusMark, localIndentSize)}${key}: ${oldValue}`;
-          const newEntry = `${_.padStart(plusMark, localIndentSize)}${key}: ${newValue}`;
-
+          const oldEntry = `${minusMark.padStart(localIndentSize)}${key}: ${formatValue(value.oldValue, localIndentSize)}`;
+          const newEntry = `${plusMark.padStart(localIndentSize)}${key}: ${formatValue(value.newValue, localIndentSize)}`;
           return `${oldEntry}\n${newEntry}`;
         }
-
-        case 'unchanged': {
-          const unchangedValue = formatValue(entry.value, localIndentSize);
-          return `${spaceChar.repeat(localIndentSize)}${key}: ${unchangedValue}`;
-        }
-
-        case 'parent': {
-          const { children } = entry;
-          const parentValue = formatListToStylish(children, localIndentSize);
-          return `${spaceChar.repeat(localIndentSize)}${key}: ${parentValue}`;
-        }
-
-        default: {
+        case 'unchanged':
+          return `${spaceChar.repeat(localIndentSize)}${key}: ${formatValue(value, localIndentSize)}`;
+        case 'parent':
+          return `${spaceChar.repeat(localIndentSize)}${key}: ${formatListToStylish(children, localIndentSize)}`;
+        default:
           throw new Error(`Unknown type '${type}'`);
-        }
       }
-    })
-    .join('\n');
+    });
 
   const globalIndent = spaceChar.repeat(globalIndentSize);
 
-  return `{\n${lines}\n${globalIndent}}`;
+  return `{\n${lines.join('\n')}\n${globalIndent}}`;
 };
 
-const getStylish = (diff) => formatListToStylish(diff);
+const getStylish = (diff) => formatListToStylish(diff, 0);
 
 export default getStylish;

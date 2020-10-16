@@ -1,37 +1,28 @@
 import _ from 'lodash';
 
-const getValidValue = (value) => {
+const formatValue = (value) => {
   if (_.isPlainObject(value)) return '[complex value]';
 
   return _.isString(value) ? `'${value}'` : value;
 };
 
-const formatListToPlain = (list, oldPath = '') => list
-  .map((entry) => {
-    const { key, type } = entry;
+const formatListToPlain = (list, oldPath) => list
+  .map(({
+    type, key, value, children,
+  }) => {
     const newPath = oldPath ? `${oldPath}.${key}` : `${key}`;
 
     switch (type) {
       case 'removed':
         return `Property '${newPath}' was removed`;
-
-      case 'added': {
-        const value = getValidValue(entry.value);
-        return `Property '${newPath}' was added with value: ${value}`;
-      }
-
-      case 'updated': {
-        const oldValue = getValidValue(entry.oldValue);
-        const newValue = getValidValue(entry.newValue);
-        return `Property '${newPath}' was updated. From ${oldValue} to ${newValue}`;
-      }
-
+      case 'added':
+        return `Property '${newPath}' was added with value: ${formatValue(value)}`;
+      case 'updated':
+        return `Property '${newPath}' was updated. From ${formatValue(value.oldValue)} to ${formatValue(value.newValue)}`;
       case 'unchanged':
         return null;
-
       case 'parent':
-        return formatListToPlain(entry.children, newPath);
-
+        return formatListToPlain(children, newPath);
       default:
         throw new Error(`Unknown type '${type}'`);
     }
@@ -39,6 +30,6 @@ const formatListToPlain = (list, oldPath = '') => list
   .filter((line) => line)
   .join('\n');
 
-const getPlain = (diff) => formatListToPlain(diff);
+const getPlain = (diff) => formatListToPlain(diff, '');
 
 export default getPlain;
