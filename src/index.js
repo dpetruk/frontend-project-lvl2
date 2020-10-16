@@ -13,43 +13,42 @@ const getParsedContent = (filepath) => {
   return parse(content);
 };
 
-const genInternalDiff = (obj1, obj2) => {
-  const keys = _.union(_.keys(obj1), _.keys(obj2)).sort();
+const genInternalDiff = (parsedContent1, parsedContent2) => {
+  const keys = _.union(_.keys(parsedContent1), _.keys(parsedContent2)).sort();
 
-  const entries = keys
-    .map((key) => {
-      const val1 = obj1[key];
-      const val2 = obj2[key];
+  const entries = keys.map((key) => {
+    if (!_.has(parsedContent2, key)) {
+      return { type: 'removed', key, value: parsedContent1[key] };
+    }
 
-      if (!_.has(obj2, key)) {
-        return { key, type: 'removed', value: val1 };
-      }
+    if (!_.has(parsedContent1, key)) {
+      return { type: 'added', key, value: parsedContent2[key] };
+    }
 
-      if (!_.has(obj1, key)) {
-        return { key, type: 'added', value: val2 };
-      }
+    const oldValue = parsedContent1[key];
+    const newValue = parsedContent2[key];
 
-      if (_.isPlainObject(val1) && _.isPlainObject(val2)) {
-        return { key, type: 'parent', children: genInternalDiff(val1, val2) };
-      }
+    if (_.isPlainObject(oldValue) && _.isPlainObject(newValue)) {
+      return { key, type: 'parent', children: genInternalDiff(oldValue, newValue) };
+    }
 
-      if (_.isEqual(val1, val2)) {
-        return { key, type: 'unchanged', value: val1 };
-      }
+    if (_.isEqual(oldValue, newValue)) {
+      return { key, type: 'unchanged', value: oldValue };
+    }
 
-      return {
-        key, type: 'updated', oldValue: val1, newValue: val2,
-      };
-    });
+    return {
+      key, type: 'updated', value: { oldValue, newValue },
+    };
+  });
 
   return entries;
 };
 
 const genDiff = (filepath1, filepath2, outputFormat = 'stylish') => {
-  const obj1 = getParsedContent(filepath1);
-  const obj2 = getParsedContent(filepath2);
+  const parsedContent1 = getParsedContent(filepath1);
+  const parsedContent2 = getParsedContent(filepath2);
 
-  const internalDiff = genInternalDiff(obj1, obj2);
+  const internalDiff = genInternalDiff(parsedContent1, parsedContent2);
 
   const genFormattedDiff = selectFormatter(outputFormat);
   const formattedDiff = genFormattedDiff(internalDiff);
